@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  vpn-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"      # Веб-интерфейс
+      - "1080:1080/tcp"   # SOCKS5 прокси
+    environment:
+      - VPN_ADDR=0.0.0.0:8080
+    volumes:
+      - ./config:/config   # Для сохранения конфигурации (если реализовано)
+    restart: unless-stopped
+    networks:
+      - vpn-network
+
+  # Опционально: Xray сервер для тестирования
+  xray-server:
+    image: teddysun/xray:latest
+    ports:
+      - "443:443"
+    volumes:
+      - ./xray-server-config.json:/etc/xray/config.json
+      - ./certs:/etc/xray/certs  # Добавьте сертификаты здесь
+    restart: unless-stopped
+    networks:
+      - vpn-network
+
+networks:
+  vpn-network:
+    driver: bridge
